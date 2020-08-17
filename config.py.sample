@@ -1,0 +1,39 @@
+LOG_LEVEL="INFO"
+LOG_FOLDER= ""
+pingrr_dry_run=False
+
+slack_enabled=True
+slack_api=''
+slack_channel=""
+
+radarr_host=""
+radarr_api=''
+radarr_quality_profile=
+radarr_minimumAvailability=""
+radarr_monitored=True
+radarr_path_root=""
+radarr_search=True
+
+sonarr_host=""
+sonarr_api=""
+sonarr_monitored=False
+sonarr_path_root=""
+sonarr_quality_profile=
+sonarr_search_missing_episodes=False
+
+imdb_info=False
+trakt_api=''
+trakt_limit=50
+trakt_movie_list={"anticipated": True, "popular": True, "trending": True}
+trakt_tv_list={"anticipated": True, "popular": True, "trending": True}
+
+filters_allow_canceled=True
+filters_allow_ended=True
+filters_country=["" ]
+filters_genre=[""]
+filters_language="en"
+filters_network=[""]
+filters_rating=
+filters_runtime=
+filters_votes=
+filters_year={"movies": 0, "shows": 0}
