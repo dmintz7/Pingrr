@@ -1,8 +1,6 @@
 import json, os, logging, sys, requests, config
 from logging.handlers import RotatingFileHandler
 from slackclient import SlackClient
-# import lib.trakt as trakt
-# import lib.sodarr as sodarr
 from lib import sodarr
 from lib import trakt
 
