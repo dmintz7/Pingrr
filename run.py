@@ -1,8 +1,10 @@
 import json, os, logging, sys, requests, config
 from logging.handlers import RotatingFileHandler
 from slackclient import SlackClient
-import lib.trakt as trakt
-import lib.sodarr as sodarr
+# import lib.trakt as trakt
+# import lib.sodarr as sodarr
+from lib import sodarr
+from lib import trakt
 
 filename, file_extension = os.path.splitext(os.path.basename(__file__))
 formatter = logging.Formatter('%(asctime)s - %(levelname)10s - %(module)15s:%(funcName)30s:%(lineno)5s - %(message)s')
