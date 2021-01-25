@@ -4,8 +4,8 @@ from slackclient import SlackClient
 from lib import sodarr
 from lib import trakt
 
-extra = {'folder_name': os.path.dirname(os.path.abspath(__file__)).split("/")[-1]}
-formatter = logging.Formatter('%(asctime)s - %(levelname)10s - %(folder_name)15s:%(module)15s:%(funcName)30s:%(lineno)5s - %(message)s')
+filename, file_extension = os.path.splitext(os.path.basename(__file__))
+formatter = logging.Formatter('%(asctime)s - %(levelname)10s - %(module)15s:%(funcName)30s:%(lineno)5s - %(message)s')
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 consoleHandler = logging.StreamHandler(sys.stdout)
@@ -13,12 +13,9 @@ consoleHandler.setFormatter(formatter)
 logger.addHandler(consoleHandler)
 logging.getLogger("requests").setLevel(logging.WARNING)
 logger.setLevel(config.LOG_LEVEL)
-fileHandler = RotatingFileHandler(config.LOG_FOLDER + '/Pingrr.log', maxBytes=1024 * 1024 * 1, backupCount=1)
+fileHandler = RotatingFileHandler(config.LOG_FOLDER + '/' + filename + '.log', maxBytes=1024 * 1024 * 1, backupCount=1)
 fileHandler.setFormatter(formatter)
 logger.addHandler(fileHandler)
-logger = logging.LoggerAdapter(logger, extra)
-
-
 
 new = []
 options = {"ignoreEpisodesWithFiles": False, "ignoreEpisodesWithoutFiles": False, "searchForMissingEpisodes": config.sonarr_search_missing_episodes}
