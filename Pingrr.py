@@ -64,7 +64,7 @@ def send_to_radarr(a, b, genres, year):
 		logger.info("dry run is on, not sending to radarr")
 		return True
 	else:
-		sdr = sodarr.API(config.radarr_host + '/api', config.radarr_api)
+		sdr = sodarr.API(config.radarr_host + '/api/v3', config.radarr_api)
 		response = sdr.add_movie(payload)
 		try:
 			sdr.command({'name':'MoviesSearch', 'movieIds': [response['id']]})

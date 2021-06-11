@@ -25,7 +25,7 @@ def get_radarr_library():
 	"""Get radarr library in a list of imdb ids"""
 	library = []
 	headers = {'X-Api-Key': config.radarr_api}
-	r = requests.get(config.radarr_host + '/api/movie', headers=headers, timeout=60)
+	r = requests.get(config.radarr_host + '/api/v3/movie', headers=headers, timeout=60)
 	try:
 		if r.status_code == 401:
 			logger.warning("Error when connecting to radarr, unauthorised. check api/url")
