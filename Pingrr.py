@@ -1,6 +1,12 @@
-import json, os, logging, sys, requests, config
+import config
+import json
+import logging
+import os
+import requests
+import sys
 from logging.handlers import RotatingFileHandler
 from slackclient import SlackClient
+
 from lib import sodarr
 from lib import trakt
 
@@ -262,7 +268,7 @@ def filter_list(list_type):
 def sendMessage(text, attachments=None):
 	try:
 		sc = SlackClient(config.slack_api)
-		result = sc.api_call("chat.postMessage", channel=config.SLACK_CHANNEL, text=text)
+		result = sc.api_call("chat.postMessage", channel=config.slack_channel, text=text)
 		if str(result['ok']) == 'True':
 			logger.debug("Succesfully Sent Message - %s" % result)
 			return "success"
