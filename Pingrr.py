@@ -40,7 +40,7 @@ def send_to_sonarr(a, b, ):
     else:
         response = None
         try:
-            sdr = sodarr.API(config.sonarr_host + '/api', config.sonarr_api)
+            sdr = sodarr.API(config.sonarr_host + '/api/v3', config.sonarr_api)
             response = sdr.add_series(payload)
             logger.debug("sent to sonarr successfully")
             return True
