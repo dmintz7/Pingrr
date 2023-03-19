@@ -3,6 +3,7 @@ import logging
 import os
 import requests
 import sys
+import http.client, urllib
 from logging.handlers import RotatingFileHandler
 
 from lib import sodarr
@@ -109,8 +110,13 @@ def add_media(program):
                         added_list.append(media['title'])
             except IOError:
                 logger.warning('error sending media: {} id: {}'.format(title, str(media_id)))
+          
+        if config.pushover_enabled:
+            message = "The following {} item(s) out of {} added to {}:\n{}".format(str(len(added_list)), str(len(new)), program, "\n".join(added_list))
+            logger.warning(message)
+            send_message(message)
 
-
+           
 def new_check(item_type):
     """Check for new trakt items in list"""
     if item_type == "movies":
@@ -271,6 +277,12 @@ def filter_list(list_type):
     logger.debug("Filtered list successfully")
 
     return filtered
+
+
+def send_message(message):
+    conn = http.client.HTTPSConnection("api.pushover.net:443")
+    conn.request("POST", "/1/messages.json", urllib.parse.urlencode( {"token": config.pushover_app_token, "user": config.pushover_user_key, "message": message}), {"Content-type": "application/x-www-form-urlencoded"})
+    conn.getresponse()
 
 
 if __name__ == "__main__":
