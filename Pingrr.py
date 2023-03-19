@@ -29,7 +29,7 @@ options = {"ignoreEpisodesWithFiles": False, "ignoreEpisodesWithoutFiles": False
            "searchForMissingEpisodes": config.sonarr_search_missing_episodes}
 
 
-def send_to_sonarr(a, b, ):
+def send_to_sonarr(a, b):
     """Send found tv program to sonarr"""
 
     logger.info("Attempting to send to sonarr")
