@@ -1,9 +1,11 @@
-import config
+import http.client
 import logging
 import os
-import requests
 import sys
+import urllib
 from logging.handlers import RotatingFileHandler
+import requests
+import config
 
 from lib import sodarr
 from lib import trakt
@@ -33,7 +35,9 @@ def send_to_sonarr(a, b, ):
     payload = {"tvdbId": a, "title": b, "qualityProfileId": config.sonarr_quality_profile, "images": [],
                "seasons": [], "seasonFolder": True, "monitored": config.sonarr_monitored,
                "rootFolderPath": config.sonarr_path_root,
-               "addOptions": options}
+               "addOptions": options,
+               "tags": [config.sonarr_tag_id]
+               }
 
     if config.pingrr_dry_run:
         logger.info("dry run is on, not sending to sonarr")
@@ -66,7 +70,8 @@ def send_to_radarr(a, b, year):
                "year": year,
                "addOptions": {
                    "searchForMovie": config.radarr_search
-               }
+               },
+               "tags": [config.radarr_tag_id]
                }
 
     if config.pingrr_dry_run:
@@ -109,6 +114,10 @@ def add_media(program):
                         added_list.append(media['title'])
             except IOError:
                 logger.warning('error sending media: {} id: {}'.format(title, str(media_id)))
+
+    if config.pushover_enabled:
+        message = "The following {} item(s) out of {} added to {}:\n{}".format(str(len(added_list)), str(len(new)), program, "\n".join(added_list))
+        send_message(message)
 
 
 def new_check(item_type):
@@ -184,11 +193,11 @@ def filter_check(title, item_type):
 
         if item_type == "shows":
             if len(config.filters_network) > 0:
-                if title['network'] is None or config.filters_network in title['network']:
-                    logger.info("{} was rejected as it was by a disallowed network: {}".format(title['title'],
-                                                                                               str(title['network'])))
+                if title['network'] is None or title['network'] in config.filters_network:
+                    logger.info("{} was rejected as it was by a disallowed network: {}".format(title['title'], str(title['network'])))
                     return False
         logger.debug("Checking votes: {}".format(title['votes']))
+
         if config.filters_votes > title['votes']:
             logger.info(
                 "{} was rejected as it did not meet vote requirement: {}".format(title['title'], str(title['votes'])))
@@ -205,8 +214,7 @@ def filter_check(title, item_type):
 
         logger.debug("Checking rating: {}".format(title['rating']))
         if float(title['rating']) < float(config.filters_rating):
-            logger.info("{} was rejected as it was outside the allowed ratings: {}".format(title['title'],
-                                                                                           str(title['rating'])))
+            logger.info("{} was rejected as it was outside the allowed ratings: {}".format(title['title'], str(title['rating'])))
             return False
 
         logger.debug("Checking genres: {}".format(title['genres']))
@@ -224,6 +232,7 @@ def filter_check(title, item_type):
             logger.info("{} was rejected as it wasn't a wanted country: {}".format(title['title'],
                                                                                    str(title['country'])))
             return False
+
         logger.debug("Checking language: {}".format(lang))
         if lang not in config.filters_language:
             logger.info("{} was rejected as it wasn't a wanted language: {}".format(title['title'], lang))
@@ -259,7 +268,6 @@ def filter_list(list_type):
         raw_list = fixed_raw
 
     filtered = []
-
     for title in raw_list:
         try:
             # If not already in the list, check against filters
@@ -268,9 +276,16 @@ def filter_list(list_type):
                 filtered.append(title)
         except TypeError:
             logger.debug('{} failed to check against filters'.format(title['title']))
+
     logger.debug("Filtered list successfully")
 
     return filtered
+
+
+def send_message(message):
+    conn = http.client.HTTPSConnection("api.pushover.net:443")
+    conn.request("POST", "/1/messages.json", urllib.parse.urlencode({"token": config.pushover_app_token, "user": config.pushover_user_key, "message": message}), {"Content-type": "application/x-www-form-urlencoded"})
+    conn.getresponse()
 
 
 if __name__ == "__main__":
@@ -289,7 +304,6 @@ if __name__ == "__main__":
             raise
 
     logger.info("###### Checking if Movie lists are wanted ######")
-
     if config.radarr_api:
         try:
             radarr_library = sodarr.get_radarr_library()
