@@ -67,7 +67,8 @@ def send_to_radarr(a, b, year):
                "year": year,
                "addOptions": {
                    "searchForMovie": config.radarr_search
-               }
+               },
+               "tags": [config.sonarr_tag_id]
                }
 
     if config.pingrr_dry_run:
