@@ -113,7 +113,6 @@ def add_media(program):
           
         if config.pushover_enabled:
             message = "The following {} item(s) out of {} added to {}:\n{}".format(str(len(added_list)), str(len(new)), program, "\n".join(added_list))
-            logger.warning(message)
             send_message(message)
 
            
