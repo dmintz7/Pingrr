@@ -116,9 +116,6 @@ def add_media(program):
             except IOError:
                 logger.warning('error sending media: {} id: {}'.format(title, str(media_id)))
           
-        if config.pushover_enabled:
-            message = "The following {} item(s) out of {} added to {}:\n{}".format(str(len(added_list)), str(len(new)), program, "\n".join(added_list))
-            send_message(message)
 
     if config.pushover_enabled:
         message = "The following {} item(s) out of {} added to {}:\n{}".format(str(len(added_list)), str(len(new)), program, "\n".join(added_list))
