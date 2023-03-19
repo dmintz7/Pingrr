@@ -3,6 +3,7 @@ import logging
 import os
 import sys
 import urllib
+import http.client
 from logging.handlers import RotatingFileHandler
 import requests
 import config
@@ -71,7 +72,7 @@ def send_to_radarr(a, b, year):
                "addOptions": {
                    "searchForMovie": config.radarr_search
                },
-               "tags": [config.radarr_tag_id]
+               "tags": [config.sonarr_tag_id]
                }
 
     if config.pingrr_dry_run:
@@ -114,6 +115,10 @@ def add_media(program):
                         added_list.append(media['title'])
             except IOError:
                 logger.warning('error sending media: {} id: {}'.format(title, str(media_id)))
+          
+        if config.pushover_enabled:
+            message = "The following {} item(s) out of {} added to {}:\n{}".format(str(len(added_list)), str(len(new)), program, "\n".join(added_list))
+            send_message(message)
 
     if config.pushover_enabled:
         message = "The following {} item(s) out of {} added to {}:\n{}".format(str(len(added_list)), str(len(new)), program, "\n".join(added_list))
