@@ -1,13 +1,12 @@
-import http.client
 import logging
 import os
 import sys
-import urllib
-import http.client
+from pushover import Pushover
 from logging.handlers import RotatingFileHandler
-import requests
-import config
 
+import requests
+
+import config
 from lib import sodarr
 from lib import trakt
 
@@ -24,12 +23,12 @@ fileHandler = RotatingFileHandler(config.log_folder + '/' + filename + '.log', m
 fileHandler.setFormatter(formatter)
 logger.addHandler(fileHandler)
 
-new = []
+# new = []
 options = {"ignoreEpisodesWithFiles": False, "ignoreEpisodesWithoutFiles": False,
            "searchForMissingEpisodes": config.sonarr_search_missing_episodes}
 
 
-def send_to_sonarr(a, b):
+def send_to_sonarr(a, b, ):
     """Send found tv program to sonarr"""
 
     logger.info("Attempting to send to sonarr")
@@ -37,8 +36,7 @@ def send_to_sonarr(a, b):
                "seasons": [], "seasonFolder": True, "monitored": config.sonarr_monitored,
                "rootFolderPath": config.sonarr_path_root,
                "addOptions": options,
-               "tags": [config.sonarr_tag_id]
-               }
+               "tags": [config.sonarr_tag_id]}
 
     if config.pingrr_dry_run:
         logger.info("dry run is on, not sending to sonarr")
@@ -72,7 +70,7 @@ def send_to_radarr(a, b, year):
                "addOptions": {
                    "searchForMovie": config.radarr_search
                },
-               "tags": [config.sonarr_tag_id]
+               "tags": [config.radarr_tag_id]
                }
 
     if config.pingrr_dry_run:
@@ -91,7 +89,8 @@ def send_to_radarr(a, b, year):
             return False
 
 
-def add_media(program):
+def add_media(item_type, new):
+    program = "radarr" if item_type == "movies" else "sonarr"
     added_list = []
     for media in new:
         media_id = None
@@ -108,51 +107,39 @@ def add_media(program):
                 if program == "sonarr":
                     if send_to_sonarr(media_id, title):
                         logger.info('{} has been added to Sonarr'.format(title))
-                        added_list.append(media['title'])
+                        added_list.append("TV - %s" % media['title'])
                 if program == "radarr":
                     if send_to_radarr(media_id, title, media['year']):
                         logger.info('{} has been added to Radarr'.format(title))
-                        added_list.append(media['title'])
+                        added_list.append("Movie - %s" % media['title'])
             except IOError:
                 logger.warning('error sending media: {} id: {}'.format(title, str(media_id)))
-          
 
     if config.pushover_enabled:
-        message = "The following {} item(s) out of {} added to {}:\n{}".format(str(len(added_list)), str(len(new)), program, "\n".join(added_list))
-        send_message(message)
+        message = ""
+        for media in new:
+            url = "https://trakt.tv/%s/%s" % (item_type, media['trakt'])
+            for y in media:
+                if y not in config.message_attributes:
+                    continue
+
+                data = media[y]
+                if isinstance(data, list):
+                    data = ", ".join(data)
+                if y == 'title':
+                    data = "<a href='%s'>%s</a>" % (url, data)
+
+                message += "%s: %s\n" % (y.title(), data)
+            message += "\n"
+        send_message(title="New %s Added to Plex" % item_type.title(), text=message, html=1)
 
 
 def new_check(item_type):
-    """Check for new trakt items in list"""
-    if item_type == "movies":
-        library = sodarr.get_radarr_library()
-        program = "radarr"
-    else:
-        library = sodarr.get_sonarr_library()
-        program = "sonarr"
-
-    global new
-
-    new = filter_list(item_type)
     logger.info('checking for new {} in lists'.format(item_type))
-
-    if item_type == "movies":
-        item_id = "imdb"
-    else:
-        item_id = "tvdb"
-
-    for x in new:
-        logger.debug('checking {} from list: {}'.format(item_type, x['title']))
-        if x[item_id] not in library and config.filters_allow_ended:
-            logger.info('new media found, adding {} {} now'.format(len(new), item_type))
-            add_media(program)
-            break
-
-        if item_type == "shows":
-            if x[item_id] not in library and not x['status'] == 'ended':
-                logger.info('new continuing show(s) found, adding shows now')
-                add_media(program)
-                break
+    new = filter_list(item_type)
+    if new:
+        logger.info('new media found, adding {} {} now'.format(len(new), item_type))
+        add_media(item_type, new)
 
 
 def check_lists(arg, arg2):
@@ -251,23 +238,13 @@ def filter_list(list_type):
     raw_list = []
     if list_type == 'shows':
         item_id = "tvdb"
-        for trakt_list in config.trakt_tv_list:
-            if config.trakt_tv_list[trakt_list]:
-                raw_list = trakt.get_info('tv')
-                break
+        if any((config.trakt_tv_list[trakt_list] for trakt_list in config.trakt_tv_list)):
+            raw_list = trakt.get_info('tv')
+
     if list_type == 'movies':
         item_id = "tmdb"
-        for trakt_list in config.trakt_movie_list:
-            if config.trakt_movie_list[trakt_list]:
-                raw_list = trakt.get_info('movie')
-                break
-        fixed_raw = []
-        for raw in raw_list:
-            try:
-                fixed_raw.append(raw[0])
-            except KeyError:
-                fixed_raw.append(raw)
-        raw_list = fixed_raw
+        if any((config.trakt_movie_list[trakt_list] for trakt_list in config.trakt_movie_list)):
+            raw_list = trakt.get_info('movie')
 
     filtered = []
     for title in raw_list:
@@ -284,15 +261,18 @@ def filter_list(list_type):
     return filtered
 
 
-def send_message(message):
-    conn = http.client.HTTPSConnection("api.pushover.net:443")
-    conn.request("POST", "/1/messages.json", urllib.parse.urlencode({"token": config.pushover_app_token, "user": config.pushover_user_key, "message": message}), {"Content-type": "application/x-www-form-urlencoded"})
-    conn.getresponse()
+def send_message(text, **kwargs):
+    logger.debug("Sending Pushover Message. Text:%s, %s" % (text, kwargs))
+    po = Pushover(config.pushover_app_token)
+    po.user(config.pushover_user_key)
+    msg = po.msg(text)
+    for x in kwargs:
+        msg.set(x, kwargs[x])
+    logger.debug(po.send(msg))
 
 
 if __name__ == "__main__":
     logger.info("###### Checking if TV lists are wanted ######")
-
     if config.sonarr_api:
         try:
             sonarr_library = sodarr.get_sonarr_library()
@@ -303,7 +283,6 @@ if __name__ == "__main__":
             logger.warning("Can not connect to Sonarr, check sonarr is running or host is correct")
         except Exception as e:
             logger.error('Error on line {}, {}, {}'.format(sys.exc_info()[-1].tb_lineno, type(e).__name__, e))
-            raise
 
     logger.info("###### Checking if Movie lists are wanted ######")
     if config.radarr_api:

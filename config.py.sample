@@ -2,9 +2,10 @@ LOG_LEVEL="INFO"
 LOG_FOLDER= ""
 pingrr_dry_run=False
 
-slack_enabled=True
-slack_api=''
-slack_channel=""
+pushover_enabled = True
+pushover_app_token = ""
+pushover_user_key = ""
+message_attributes = ['title', 'status', 'genres', 'votes', 'network', 'year', 'certification']
 
 radarr_host=""
 radarr_api=''

@@ -1,1 +1,2 @@
-requests>=2.21.0
+requests==2.21.0
+git+https://github.com/Wyattjoh/pushover#egg=pushover
