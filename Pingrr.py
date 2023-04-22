@@ -198,7 +198,12 @@ def filter_check(title, item_type):
 
         if item_type == "shows":
             if config.filters_allow_canceled is False and 'canceled' in title['status']:
-                logger.info("{} was rejected as it an canceled tv show".format(title['title']))
+                logger.info("{} was rejected as it is a canceled tv show".format(title['title']))
+                return False
+
+        if item_type == "shows":
+            if config.filters_allow_returning is False and 'returning' in title['status']:
+                logger.info("{} was rejected as it is a returning tv show".format(title['title']))
                 return False
 
         logger.debug("Checking rating: {}".format(title['rating']))
