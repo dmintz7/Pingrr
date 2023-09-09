@@ -92,6 +92,7 @@ def send_to_radarr(a, b, year):
 def add_media(item_type, new):
     program = "radarr" if item_type == "movies" else "sonarr"
     added_list = []
+    message = ""
     for media in new:
         media_id = None
         title = media['title']
@@ -115,9 +116,6 @@ def add_media(item_type, new):
             except IOError:
                 logger.warning('error sending media: {} id: {}'.format(title, str(media_id)))
 
-    if config.pushover_enabled:
-        message = ""
-        for media in new:
             url = "https://trakt.tv/%s/%s" % (item_type, media['trakt'])
             for y in media:
                 if y not in config.message_attributes:
@@ -131,6 +129,10 @@ def add_media(item_type, new):
 
                 message += "%s: %s\n" % (y.title(), data)
             message += "\n"
+        else:
+            logger.error("Failed Adding %s to %s - No TMDB/TVDB Id Found" % (title, program))
+            
+    if config.pushover_enabled and message:
         send_message(title="New %s Added to Plex" % item_type.title(), text=message, html=1)
 
 
