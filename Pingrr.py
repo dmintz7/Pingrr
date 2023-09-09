@@ -86,6 +86,7 @@ def send_to_radarr(a, b, year):
         except Exception as a:
             logger.error('Error on line {} - {} - {}'.format(type(a).__name__, sys.exc_info()[-1].tb_lineno, a))
             logger.error("failed to send to radarr")
+            logger.error(response)
             return False
 
 
@@ -216,8 +217,7 @@ def filter_check(title, item_type):
         logger.debug("Checking genres: {}".format(title['genres']))
         if isinstance(config.filters_genre, list):
             if check_lists(config.filters_genre, title['genres']):
-                logger.info(
-                    "{} was rejected as it wasn't a wanted genre: {}".format(title['title'], str(title['genres'])))
+                logger.info("{} was rejected as it wasn't a wanted genre: {}".format(title['title'], str(title['genres'])))
                 return False
         elif title['genres'] in config.filters_genre:
             logger.info("{} was rejected as it wasn't a wanted genre: {}".format(title['title'], str(title['genres'])))

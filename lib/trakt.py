@@ -24,8 +24,7 @@ def search(search_string, trakt_type):
     if search_string is None:
         return False
 
-    url = "https://api.trakt.tv/search/{}?query={}&extended=full"\
-        .format(trakt_type, urllib.quote_plus(search_string))
+    url = "https://api.trakt.tv/search/{}?query={}&extended=full".format(trakt_type, urllib.quote_plus(search_string))
     logger.debug('getting info from trakt for {}'.format(search_string))
     r = requests.get(url=url, headers=headers, timeout=10)
 
@@ -55,7 +54,7 @@ def search(search_string, trakt_type):
         if config.imdb_info:
             # Load imdb api for show/movie
             try:
-                m = i.get_movie(y['ids']['imdb'][2:])
+                m = y.get_movie(y['ids']['imdb'][2:])
             except TypeError:
                 return False
 
@@ -209,8 +208,8 @@ def get_trakt_data(name, cat):
             logger.debug("got {}'s info successfully".format(obj['title']))
     return x
 
-def get_info(arg):
 
+def get_info(arg):
     trakt_temp_tv = []
     trakt_temp_movie = []
     if arg == 'tv':
@@ -219,7 +218,8 @@ def get_info(arg):
             if config.trakt_tv_list[tv_list]:
                 logger.info("Getting {} tv list from trakt".format(tv_list))
                 tv_list_temp = get_trakt_data('shows', tv_list)
-                if tv_list_temp: trakt_temp_tv.append(tv_list_temp)
+                if tv_list_temp:
+                    trakt_temp_tv.append(tv_list_temp)
                    
         trakt_complete_tv = []
 
