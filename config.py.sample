@@ -30,6 +30,7 @@ trakt_tv_list={"anticipated": True, "popular": True, "trending": True}
 
 filters_allow_canceled=True
 filters_allow_ended=True
+filters_allow_returning = True
 filters_country=["" ]
 filters_genre=[""]
 filters_language="en"
